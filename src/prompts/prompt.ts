@@ -3,6 +3,8 @@ import { AuthMethod, SocialProvider } from "../types/constent";
 import chalk from "chalk";
 import { section, showSummary } from "../components/mislineous";
 import { cliState } from "../components/state";
+import { fail, startLoading, succeed } from "../core/loader";
+import { resolveTemplates } from "../core/api";
 
 
 
@@ -167,9 +169,18 @@ export async function runPrompts() {
         // Restart prompts
         return runPrompts();
     }
-    console.log(
-        chalk.greenBright("\n🚀 Setup confirmed. Generating project...\n")
-    );
+    console.log("\n");
+    startLoading("Generating project...");
 
+    // try {
+    //     const plan = await resolveTemplates(cliState);
+    //     succeed("Templates resolved successfully");
+
+    //     console.log("\n📦 Build plan received:");
+    //     console.log(plan);
+    // } catch (error) {
+    //     fail("Failed to resolve templates");
+    //     process.exit(1);
+    // }
 
 }

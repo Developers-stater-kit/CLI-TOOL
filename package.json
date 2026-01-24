@@ -6,14 +6,13 @@
     "devkit": "dist/index.js"
   },
   "scripts": {
-    "built": "tsc",
     "build": "bun build src/index.ts --outdir dist --target node",
     "dev": "ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Debojeet Karmakar",
   "license": "ISC",
-  "description": "Developers Stater Kit",
+  "description": "Developers Stater Kit CLI Tool",
   "dependencies": {
     "@inquirer/prompts": "^8.2.0",
     "axios": "^1.13.2",
