@@ -1,13 +1,13 @@
 export type AppType = "web" | "mobile"
 export type ScopeType = "frontend" | "backend" | "fullstack"
 export type DBType = "sql" | "no-sql"
-export type AuthMethod = "email" | "social" | "otp" | "custom";
-export type SocialProvider = "google" | "github" | "apple" | "custom";
+export type AuthMethod = "email" | "social" | "otp";
+export type SocialProvider = "google" | "github";
 export type SetupUpto = "framework" | "auth" | "database" | "payments";
 
 export interface CliState {
   projectName?: string;
-  socpe?: ScopeType;
+  scope?: ScopeType;
   appType?: AppType;
   framework?: string;
   setupUpto?: SetupUpto;
@@ -37,21 +37,31 @@ export const PROJECT_TYPE_CHOICES = [
 export const getFrameworkChoices = (appType: AppType) =>
   appType === "web"
     ? [
-        { name: "Next.js", value: "nextjs" },
-        { name: "React", value: "react" },
-      ]
+      { name: "Next.js", value: "nextjs" },
+      { name: "React", value: "react" },
+    ]
     : [{ name: "Expo", value: "expo" }];
 
 export const PROJECT_SETUP_CHOICES = [
   { name: "Minimal (Base Framework)", value: "framework" },
-  { name: "Authentication Layer", value: "auth" },
   { name: "Data Persistence (DB & ORM)", value: "database" },
+  { name: "Authentication Layer", value: "auth" },
   // { name: "Payment Gateways", value: "payments" }, // Not for MVP
 ] as const;
 
+export const DB_STRATEGY_CHOICES = [
+  { name: "Relational (SQL-based, ACID compliant)", value: "sql" },
+  { name: "Non-relational (NoSQL, Schema-less)", value: "no-sql" },
+] as const;
+
+export const ORM_CHOICES = [
+  { name: "Drizzle (High-performance & SQL-centric)", value: "drizzle" },
+  { name: "Prisma (Productivity-focused & Type-safe)", value: "prisma" },
+  { name: "TypeORM (Standard Enterprise Architecture)", value: "typeorm" },
+] as const;
 
 export const AUTH_PROVIDER_CHOICES = [
-  { name: "BetterAuth (Modern, Type-safe)", value: "better-auth" },
+  { name: "BetterAuth (Modern, Type-safe)", value: "betterauth" },
   { name: "Next-Auth (Standard, Battle-tested)", value: "auth0" },
 ] as const;
 
@@ -65,18 +75,6 @@ export const SOCIAL_PROVIDER_CHOICES = [
   { name: "GitHub", value: "github" },
 ] as const
 
-
-export const DB_STRATEGY_CHOICES = [
-  { name: "Relational (SQL-based, ACID compliant)", value: "sql" },
-  { name: "Non-relational (NoSQL, Schema-less)", value: "no-sql" },
-] as const;
-
-export const ORM_CHOICES = [
-  { name: "Drizzle (High-performance & SQL-centric)", value: "drizzle" },
-  { name: "Prisma (Productivity-focused & Type-safe)", value: "prisma" },
-  { name: "TypeORM (Standard Enterprise Architecture)", value: "typeorm" },
-] as const;
-
 // not for MVP
 export const PAYMENT_PROVIDER_CHOICES = [
   { name: "Stripe (Global Standard)", value: "stripe" },
@@ -84,5 +82,8 @@ export const PAYMENT_PROVIDER_CHOICES = [
   { name: "Dodo Payments (Merchant of Record)", value: "dodo" },
 ] as const;
 
-
-
+export const PACKAGE_MANAGER = [
+  { name: "bun", value: "bun" },
+  { name: "npm", value: "npm" },
+  { name: "pnpm", value: "pnpm" }
+] as const; 
