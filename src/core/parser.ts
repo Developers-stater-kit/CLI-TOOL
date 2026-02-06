@@ -1,54 +1,70 @@
-export interface ParsedPlan {
-    name: string;
-    scope: string;
-    appType: string;
-    repos: repoType[];
-    metadata: {
-        allEnvVars: string[];
-    };
-}
+export type FileMap = {
+    source: string;
+    destination: string;
+    strategy: "copy" | "merge" | "overwrite";
+    renameto: string;
+};
 
 
-type repoType = {
+type workflowType = {
     type: string;
     key: string;
-    repoName: string;
+    repoName?: string;
     order: number;
-    version: string;
+    commands?: any;
+    fileMap?: FileMap[];
 }
 
-type Respose = {
-    success: boolean,
+interface Respose {
+    success: boolean,                       
     mssg: string,
-    data: repoType[]
+    data: {
+        workflow: workflowType[];
+        metadata: {
+            allEnvVars: string[];
+            dependencies: string[];
+            devDependencies: string[];
+        };
+    };
 }
 
 export async function parseBuildPlan(buildPlan: any): Promise<Respose> {
     try {
-        if (!buildPlan.repos || !Array.isArray(buildPlan.repos)) {
+        if (!buildPlan.workflow || !Array.isArray(buildPlan.workflow)) {
             throw new Error("Invalid build plan structure");
         }
 
-        const repos: repoType[] = buildPlan.repos
+        const workflows: workflowType[] = buildPlan.workflow
             .sort((a: any, b: any) => a.order - b.order)
-            .map((repo: any) => ({
-                repoName: repo.repoName,
-                order: repo.order,
-                
+            .map((w: any) => ({
+                type: w?.type,
+                key: w?.key,
+                order: w.order,
+                ...(w.repoName && { repoName: w.repoName }),
+                ...(w.commands && { commands: w.commands }),
+                ...(w.fileMap && { steps: w.fileMap })
             }));
-
-        // console.log("Repos to download:", repos);
 
         return {
             success: true,
             mssg: "Plan parsed successfully",
-            data: repos
+            data: {
+                workflow: workflows,
+                metadata: buildPlan.metadata
+            }
         };
     } catch (error: any) {
         return {
             success: false,
             mssg: `Failed to parse Plan: ${error.message}`,
-            data: []
+            data: {
+                workflow: [],
+                metadata: {
+                    allEnvVars: [],
+                    dependencies: [],
+                    devDependencies: []
+                }
+            }
         };
     }
 }
