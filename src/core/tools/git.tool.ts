@@ -1,5 +1,6 @@
 import { exec } from "child_process";
 import { promisify } from "util";
+import { deleteFolder } from "./file.tool";
 
 const execAsync = promisify(exec);
 
@@ -14,5 +15,6 @@ export async function checkoutBranch(projectPath: string, branch: string) {
 }
 
 export async function removeGit(projectPath: string) {
-  await execAsync(`rm -rf .git`, { cwd: projectPath });
+  // Use deleteFolder from file.tool instead of shell command (cross-platform)
+  deleteFolder(`${projectPath}/.git`);
 }

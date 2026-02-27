@@ -17,7 +17,7 @@ export function startLoading(text: string) {
 
   spinner = ora({
     text: chalk.white(text),
-    spinner: "dots",
+    spinner: "circle",
   }).start();
 }
 

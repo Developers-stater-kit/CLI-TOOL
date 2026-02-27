@@ -20,6 +20,8 @@ export function runCLI() {
         .command("init [dir]") // [dir] makes it optional
         .description("Create a new project")
         .action(async (dir) => {
+            
+            console.log('\n\n');
             showBanner();
 
             let targetPath = dir ? path.resolve(process.cwd(), dir) : null;
@@ -40,11 +42,6 @@ export function runCLI() {
                             ]
                         });
 
-                        if (action === "cancel") {
-                            console.log(chalk.yellow("\n👋 Setup cancelled. See you next time!"));
-                            process.exit(0);
-                        }
-
                         // Clear the folder (excluding system files if necessary)
                         startLoading("Clearing directory...");
                         emptyDirectory(targetPath);
@@ -56,12 +53,12 @@ export function runCLI() {
                 await runPrompts(targetPath);
 
             } catch (error: any) {
-                if (error.name === "ExitPromptError") {
+                if (error.message === "Selection cancelled" || "Input cancelled") {
                     console.log(chalk.yellow("\n\n👋 Setup cancelled. See you next time!"));
                     process.exit(0);
                 }
                 
-                console.error(chalk.red("\nAn unexpected error occurred:"), error.message);
+                console.error(chalk.red("\nSome Error occurred:"), error.message);
                 process.exit(1);
             }
         });

@@ -56,7 +56,7 @@ export const UI_LIB_CHOICE = [
 export const PROJECT_SETUP_CHOICES = [
   { name: "Minimal (Base Framework)", value: "framework" },
   { name: "Data Persistence (DB & ORM)", value: "db-orm" },
-  // { name: "Authentication Layer", value: "auth" },
+  { name: "Authentication Layer", value: "auth" },
   // { name: "Payment Gateways", value: "payments" }, // Not for MVP
 ] as const;
 

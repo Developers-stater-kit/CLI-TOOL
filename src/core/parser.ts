@@ -1,8 +1,7 @@
-export type FileMap = {
-    source: string;
-    destination: string;
-    strategy: "copy" | "merge" | "overwrite";
-    renameto: string;
+export type Files = {
+    path: string,
+    content: string,
+    name: string;
 };
 
 
@@ -12,23 +11,26 @@ type workflowType = {
     repoName?: string;
     order: number;
     commands?: any;
-    fileMap?: FileMap[];
+    files?: Files[];
+    envVars?: string[]; // will remove in future no need as we have the all the deps and envs in the metadata
+    dependencies?: string[]; // will remove in future no need as we have the all the deps and envs in the metadata
+    devDependencies?: string[]; // will remove in future no need as we have the all the deps and envs in the metadata
 }
 
 interface Respose {
-    success: boolean,                       
+    success: boolean,
     mssg: string,
     data: {
         workflow: workflowType[];
         metadata: {
-            allEnvVars: string[];
+            envVars: string[];
             dependencies: string[];
             devDependencies: string[];
         };
     };
 }
 
-export async function parseBuildPlan(buildPlan: any): Promise<Respose> {
+export async function parsePlan(buildPlan: any): Promise<Respose> {
     try {
         if (!buildPlan.workflow || !Array.isArray(buildPlan.workflow)) {
             throw new Error("Invalid build plan structure");
@@ -41,8 +43,8 @@ export async function parseBuildPlan(buildPlan: any): Promise<Respose> {
                 key: w?.key,
                 order: w.order,
                 ...(w.repoName && { repoName: w.repoName }),
+                ...(w.files && { files: w.files }),
                 ...(w.commands && { commands: w.commands }),
-                ...(w.fileMap && { steps: w.fileMap })
             }));
 
         return {
@@ -60,7 +62,7 @@ export async function parseBuildPlan(buildPlan: any): Promise<Respose> {
             data: {
                 workflow: [],
                 metadata: {
-                    allEnvVars: [],
+                    envVars: [],
                     dependencies: [],
                     devDependencies: []
                 }
