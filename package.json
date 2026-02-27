@@ -26,7 +26,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/debojeet-2004/CLI-TOOL"
+    "url": "https://github.com/Developers-stater-kit/CLI-TOOL"
   },
   "dependencies": {
     "@inquirer/prompts": "^8.2.0",
