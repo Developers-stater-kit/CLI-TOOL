@@ -12,9 +12,9 @@ export function runCLI() {
     const program = new Command();
 
     program
-        .name("dvkit")
+        .name("dvbuilds")
         .description("Create a production-ready web or mobile app with one command")
-        .version("1.0.0");
+        .version("1.0.2");
 
     program
         .command("init [dir]") // [dir] makes it optional

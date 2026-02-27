@@ -5,7 +5,7 @@ import figlet from "figlet";
 
 
 export function showBanner() {
-    const base = figlet.textSync("DVKIT", {
+    const base = figlet.textSync("DEVBUILDS", {
         font: "ANSI Shadow",
         horizontalLayout: "default",
     });

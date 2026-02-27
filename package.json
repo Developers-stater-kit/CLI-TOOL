@@ -16,6 +16,7 @@
   "description": "Multi-framework starter kit CLI for rapid project setup",
   "keywords": [
     "cli",
+    "dvkit",
     "devkit",
     "dvbuilds",
     "devbuilds",

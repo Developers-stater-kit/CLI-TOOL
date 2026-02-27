@@ -20,19 +20,16 @@
 
 ---
 
-**Dvkit** is a minimal CLI tool to bootstrap fullstack web/mobile apps — Next.js, React, or Expo — with authentication, database, ORM, and payment integration in one command.
+**DevBuilds** is a minimal CLI tool to bootstrap fullstack web/mobile apps — Next.js, React, or Expo — with authentication, database, ORM, and payment integration in one command.
 
 ### Quick Start
 
 ```bash
-npm install -g dvkit
+npx @dvbuilds/kit init
 dvkit init
 ```
-```bash
-npx dvkit init
-```
 
-Answer the prompts, and Dvkit scaffolds a production-ready project for you.
+Answer the prompts, and DevBuilds scaffolds a production-ready project for you.
 
 - Next.js, React (web), or Expo (mobile)
 - Built-in Auth, DB, ORM, and Payments
@@ -48,7 +45,7 @@ _Built for modern developers. No setup hassle. Just code your app._
 
 **Made by [Debojeet Karmakar](https://www.linkedin.com/in/debojeet-karmakar-852820210/)**
 
-If you tried Dvkit, I would love to hear your feedback!  
+If you tried DevBuilds, I would love to hear your feedback!  
 Feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/debojeet-karmakar-852820210/) and let me know how your experience was or share your suggestions for improvements.
 
 ---
