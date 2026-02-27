@@ -1,5 +1,5 @@
 {
-  "name": "@devbuilds/cli",
+  "name": "devkit",
   "version": "1.0.0",
   "bin": {
     "devkit": "dist/index.js"
