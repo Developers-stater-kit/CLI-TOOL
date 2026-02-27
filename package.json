@@ -1,5 +1,5 @@
 {
-  "name": "@devkit/cli",
+  "name": "@devbuilds/cli",
   "version": "1.0.0",
   "bin": {
     "devkit": "dist/index.js"
@@ -7,7 +7,7 @@
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target node",
     "dev": "ts-node src/index.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "bun run build"
   },
   "author": "Debojeet Karmakar",
   "license": "MIT",

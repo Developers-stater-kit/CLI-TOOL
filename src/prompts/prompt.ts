@@ -142,7 +142,7 @@ export async function runPrompts(targetPath?: string | null) {
 
     cliState.authMethods = authMethods;
 
-    
+
 
     // ─ SOCIAL PROVIDERS (Sub-conditional) ─
     if (authMethods.includes("social")) {
@@ -154,7 +154,7 @@ export async function runPrompts(targetPath?: string | null) {
         choices: SOCIAL_PROVIDER_CHOICES,
       })) as SocialProvider[];
 
-      
+
     }
   }
 
@@ -198,8 +198,10 @@ export async function runPrompts(targetPath?: string | null) {
   uiLoader("Generating plan...");
 
   try {
+    const SERVICE_URL = "https://devkit-service.onrender.com";
+        
     const response = await axios.post(
-      `${process.env.API_BASE_URL || "http://localhost:6000/api"}/compose`,
+      `${SERVICE_URL!}/api/compose`,
       cliState
     );
 
