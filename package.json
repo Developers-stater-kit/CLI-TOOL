@@ -1,19 +1,33 @@
 {
-  "name": "devkit",
+  "name": "@devkit/cli",
   "version": "1.0.0",
-  "type": "module",
-  "main": "dist/index.js",
   "bin": {
     "devkit": "dist/index.js"
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target node",
     "dev": "ts-node src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublishOnly": "npm run build"
   },
   "author": "Debojeet Karmakar",
-  "license": "ISC",
-  "description": "Developers Stater Kit CLI Tool",
+  "license": "MIT",
+  "description": "Multi-framework starter kit CLI for rapid project setup",
+  "keywords": [
+    "cli",
+    "devkit",
+    "framework",
+    "boilerplate",
+    "starter-kit",
+    "nextjs",
+    "fullstack",
+    "generator",
+    "scaffolding",
+    "development"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/debojeet-2004/CLI-TOOL"
+  },
   "dependencies": {
     "@inquirer/prompts": "^8.2.0",
     "axios": "^1.13.2",
