@@ -5,7 +5,7 @@ import figlet from "figlet";
 
 
 export function showBanner() {
-    const base = figlet.textSync("DEVKIT", {
+    const base = figlet.textSync("DVKIT", {
         font: "ANSI Shadow",
         horizontalLayout: "default",
     });
@@ -17,7 +17,7 @@ export function showBanner() {
 
     // Small badge + subtitle
     console.log(
-        // chalk.bgCyan.black(" devkit ") +
+        // chalk.bgCyan.black(" dvkit ") +
         chalk.gray("Generate production-ready setups in minutes")
     );
 
@@ -46,7 +46,7 @@ export function section(title: string) {
   }
   
   // ─── TAG BADGE (like blue “skills”) ───────────
-  // [ devkit ]
+  // [ dvkit ]
   
   export function tag(text: string) {
     return chalk.bgCyan.black(` ${text} `);

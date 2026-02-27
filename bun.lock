@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "devkit",
+      "name": "dvkit",
       "dependencies": {
         "@inquirer/prompts": "^8.2.0",
         "axios": "^1.13.2",

@@ -12,7 +12,7 @@ export function runCLI() {
     const program = new Command();
 
     program
-        .name("devbuild")
+        .name("dvkit")
         .description("Create a production-ready web or mobile app with one command")
         .version("1.0.0");
 

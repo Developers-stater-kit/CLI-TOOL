@@ -2,15 +2,15 @@
 <div align="center">
 
 ```
-██████╗ ███████╗██╗   ██╗██████╗ ██╗   ██╗██╗██╗     ██████╗
-██╔══██╗██╔════╝██║   ██║██╔══██╗██║   ██║██║██║     ██╔══██╗
-██║  ██║█████╗  ██║   ██║██████╔╝██║   ██║██║██║     ██║  ██║
-██║  ██║██╔══╝  ╚██╗ ██╔╝██╔══██╗██║   ██║██║██║     ██║  ██║
-██████╔╝███████╗ ╚████╔╝ ██████╔╝╚██████╔╝██║███████╗██████╔╝
-╚═════╝ ╚══════╝  ╚═══╝  ╚═════╝  ╚═════╝ ╚═╝╚══════╝╚═════╝
+██████╗ ██╗   ██╗██╗  ██╗██╗████████╗
+██╔══██╗██║   ██║██║ ██╔╝██║╚══██╔══╝
+██║  ██║██║   ██║█████╔╝ ██║   ██║   
+██║  ██║╚██╗ ██╔╝██╔═██╗ ██║   ██║   
+██████╔╝ ╚████╔╝ ██║  ██╗██║   ██║   
+╚═════╝   ╚═══╝  ╚═╝  ╚═╝╚═╝   ╚═╝   
 ```
 
-**Create a production-ready web or mobile app instantly with Devbuild**
+**Create a production-ready web or mobile app instantly with Dvkit**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
@@ -20,16 +20,19 @@
 
 ---
 
-**Devbuild** is a minimal CLI tool to bootstrap fullstack web/mobile apps — Next.js, React, or Expo — with authentication, database, ORM, and payment integration in one command.
+**Dvkit** is a minimal CLI tool to bootstrap fullstack web/mobile apps — Next.js, React, or Expo — with authentication, database, ORM, and payment integration in one command.
 
 ### Quick Start
 
 ```bash
-npm install -g devbuild
-devbuild create
+npm install -g dvkit
+dvkit init
+```
+```bash
+npx dvkit init
 ```
 
-Answer the prompts, and Devbuild scaffolds a production-ready project for you.
+Answer the prompts, and Dvkit scaffolds a production-ready project for you.
 
 - Next.js, React (web), or Expo (mobile)
 - Built-in Auth, DB, ORM, and Payments
@@ -45,7 +48,7 @@ _Built for modern developers. No setup hassle. Just code your app._
 
 **Made by [Debojeet Karmakar](https://www.linkedin.com/in/debojeet-karmakar-852820210/)**
 
-If you tried Devbuild, I would love to hear your feedback!  
+If you tried Dvkit, I would love to hear your feedback!  
 Feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/debojeet-karmakar-852820210/) and let me know how your experience was or share your suggestions for improvements.
 
 ---

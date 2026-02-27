@@ -1,8 +1,9 @@
 {
-  "name": "devbuild",
+  "name": "dvkit",
   "version": "1.0.0",
+  "type": "module",
   "bin": {
-    "devbuild": "dist/index.js"
+    "dvkit": "dist/index.js"
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target node",
@@ -14,11 +15,13 @@
   "description": "Multi-framework starter kit CLI for rapid project setup",
   "keywords": [
     "cli",
-    "devbuild",
+    "dvkit",
     "framework",
     "boilerplate",
     "starter-kit",
     "nextjs",
+    "betterauth",
+    "drizzle",
     "fullstack",
     "generator",
     "scaffolding",
