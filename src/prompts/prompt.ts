@@ -1,175 +1,220 @@
-import { input, select, checkbox } from "@inquirer/prompts";
-import { AuthMethod, SocialProvider } from "../types/constent";
 import chalk from "chalk";
-import { section, showSummary } from "../components/mislineous";
 import { cliState } from "../components/state";
+import path from "node:path";
+import axios from "axios";
 
+import {
+  AUTH_METHOD_CHOICES,
+  AUTH_PROVIDER_CHOICES,
+  AuthMethod,
+  ORM_CHOICES,
+  PROJECT_SCOPE_CHOICES,
+  PROJECT_SETUP_CHOICES,
+  PROJECT_TYPE_CHOICES,
+  SOCIAL_PROVIDER_CHOICES,
+  SocialProvider,
+  DB_ENGINE_CHOICES,
+  DB_PROVIDER_MAPPING,
+  FRAMEWORK_MAPPING,
+  UI_LIB_CHOICE,
+  ScopeType,
+  AppType,
+  SetupUpto
+} from "../types/constent";
 
+import {
+  uiInput,
+  uiSelect,
+  uiCheckbox,
+  uiLoader,
+  uiSuccess,
+  uiFail,
+  uiStep,
+} from "../components/ui/ui-tools";
 
-export async function runPrompts() {
-    // ---------- PROJECT ----------
-    section("Project Details");
+import { buildProject } from "../core/builder";
+import { THEME } from "../components/ui/theme";
+import { uiConfirm, uiDivider, uiLine, uiSummary } from "../components/ui/base-tools";
 
-    cliState.projectName = await input({
-        message: "What will be the name of your project?",
-        validate: (v) => (v ? true : "Project name is required"),
+export async function runPrompts(targetPath?: string | null) {
+
+  /* ─────────────────────────────────────────
+     PROJECT DETAILS
+     ───────────────────────────────────────── */
+
+  uiDivider("Project Details");
+
+  // ─ PROJECT NAME ─
+  if (targetPath) {
+    cliState.projectName = path.basename(
+      targetPath === "." ? process.cwd() : targetPath
+    );
+    uiLine("Project name", cliState.projectName, {
+      icon: THEME.icons.done,
+      indent: 1
     });
+  } else {
+    cliState.projectName = await uiInput({
+      message: "Enter the project name:",
+      validate: (v: string) => {
+        if (!v) return "Required";
+        if (!/^[a-z0-9-]+$/.test(v))
+          return "Only a-z 0-9 and - allowed";
+        return true;
+      },
+    });
+  }
 
-    cliState.appType = await select({
-        message: "What type of project is this?",
-        choices: [
-            { name: "Web App", value: "web" },
-            { name: "Mobile App", value: "mobile" },
+  // ─ SCOPE ─
+  cliState.scope = (await uiSelect({
+    message: "Select the scope of the project:",
+    choices: PROJECT_SCOPE_CHOICES,
+  })) as ScopeType;
+
+  // ─ PLATFORM ─
+  cliState.appType = (await uiSelect({
+    message: "Select the target platform:",
+    choices: PROJECT_TYPE_CHOICES,
+  })) as AppType;
+
+  // ─ FRAMEWORK ─
+  cliState.framework = (await uiSelect({
+    message: "Select a development framework:",
+    choices:
+      FRAMEWORK_MAPPING[cliState.appType as keyof typeof FRAMEWORK_MAPPING],
+  })) as string;
+
+  // ─ UI LIBRARY ─
+  cliState.isShadcn = (await uiSelect({
+    message: "Use ShadCN UI components?",
+    choices: UI_LIB_CHOICE,
+  })) as boolean;
+
+  // ─ SETUP LEVEL ─
+  cliState.setupUpto = (await uiSelect({
+    message: "Configuration level:",
+    choices: PROJECT_SETUP_CHOICES,
+  })) as SetupUpto;
+
+  /* ─────────────────────────────────────────
+     DATABASE & ORM (Conditional)
+     ───────────────────────────────────────── */
+
+  if (["auth", "db-orm", "payments"].includes(cliState.setupUpto!)) {
+    uiDivider("Database & ORM");
+
+    cliState.dbEngine = (await uiSelect({
+      message: "Database engine:",
+      choices: DB_ENGINE_CHOICES,
+    })) as string;
+
+    cliState.dbProvider = (await uiSelect({
+      message: "Database provider:",
+      choices:
+        DB_PROVIDER_MAPPING[
+        cliState.dbEngine as keyof typeof DB_PROVIDER_MAPPING
         ],
+    })) as string;
 
-    });
+    cliState.orm = (await uiSelect({
+      message: "ORM layer:",
+      choices: ORM_CHOICES,
+    })) as string;
+  }
 
-    cliState.framework = await select({
-        message: "Choose a framework",
-        choices:
-            cliState.appType === "web"
-                ? [
-                    { name: "Next.js", value: "nextjs" },
-                    { name: "React", value: "react" },
-                ]
-                : [{ name: "Expo", value: "expo" }],
-    });
+  /* ─────────────────────────────────────────
+     AUTHENTICATION (Conditional)
+     ───────────────────────────────────────── */
 
-    cliState.setupUpto = await select({
-        message: "How much setup do you want?",
-        choices: [
-            { name: "Framework only", value: "framework" },
-            { name: "Up to Authentication", value: "auth" },
-            { name: "Up to Database & ORM", value: "database" },
-            { name: "Full setup (Payments)", value: "payments" },
-        ],
-    });
+  if (["auth", "payments"].includes(cliState.setupUpto!)) {
+    uiDivider("Authentication");
 
-    // ---------- AUTH ----------
-    if (["auth", "database", "payments"].includes(cliState.setupUpto)) {
-        section("Authentication Setup");
+    cliState.authLib = (await uiSelect({
+      message: "Auth provider:",
+      choices: AUTH_PROVIDER_CHOICES,
+    })) as string;
 
-        cliState.authLib = await select({
-            message: "Choose authentication library",
-            choices: [
-                { name: "BetterAuth", value: "better-auth" },
-                { name: "Clerk", value: "clerk" },
-                { name: "Firebase Auth", value: "firebase-auth" },
-                { name: "Supabase Auth", value: "supabase-auth" },
-            ],
-        });
+    const authMethods = (await uiCheckbox({
+      message: "Authentication methods:",
+      required: true,
+      choices: AUTH_METHOD_CHOICES,
+    })) as AuthMethod[];
 
-        const authMethods = (await checkbox({
-            message: "Select authentication methods",
-            required: true,
-            choices: [
-                { name: "Email / Password", value: "email" },
-                { name: "Social Login", value: "social" },
-                { name: "Phone OTP", value: "otp" },
-                { name: "Custom", value: "custom" },
-            ],
+    cliState.authMethods = authMethods;
 
-        })) as AuthMethod[];
+    
 
-        cliState.authMethods = authMethods;
+    // ─ SOCIAL PROVIDERS (Sub-conditional) ─
+    if (authMethods.includes("social")) {
+      uiDivider("Social Providers");
 
-        if (authMethods.includes("social")) {
-            section("Social Providers");
+      cliState.socialProviders = (await uiCheckbox({
+        message: "Choose social providers:",
+        required: true,
+        choices: SOCIAL_PROVIDER_CHOICES,
+      })) as SocialProvider[];
 
-            cliState.socialProviders = (await checkbox({
-                message: "Select social providers",
-                required: true,
-                choices: [
-                    { name: "Google", value: "google" },
-                    { name: "GitHub", value: "github" },
-                    { name: "Apple", value: "apple" },
-                    { name: "Custom Provider", value: "custom" },
-                ],
-            })) as SocialProvider[];
-        }
+      
     }
+  }
 
-    // ---------- DATABASE ----------
-    if (["database", "payments"].includes(cliState.setupUpto)) {
-        section("Database & ORM");
+  /* ─────────────────────────────────────────
+     CONFIRMATION & SUMMARY
+     ───────────────────────────────────────── */
 
-        cliState.dbType = await select({
-            message: "Choose database Type",
-            choices: [
-                { name: "SQL", value: "sql" },
-                { name: "NO-SQL", value: "no-sql" },
-            ]
-        });
+  uiDivider("Review Configuration");
 
-        // Determine provider choices based on selected type
-        let dbProviderChoices;
-        if (cliState.dbType === "sql") {
-            dbProviderChoices = [
-                { name: "Neon", value: "neon" },
-                { name: "Supabase", value: "supabase" },
-                { name: "Firebase", value: "firebase" },
-            ];
-        } else {
-            dbProviderChoices = [
-                { name: "Neon", value: "neon" },
-                { name: "MongoDb", value: "mongodb" },];
-        }
+  const summaryItems = [
+    { label: "Project", value: cliState.projectName! },
+    { label: "Scope", value: cliState.scope! },
+    { label: "Platform", value: cliState.appType! },
+    { label: "Framework", value: cliState.framework! },
+    { label: "Use Shadcn", value: cliState.isShadcn ? "Yes" : "No" },
+    { label: "Set Upto", value: cliState.setupUpto! },
+  ];
 
-        cliState.dbProvider = await select({
-            message: "Choose database provider",
-            choices: dbProviderChoices,
-        });
+  if (cliState.dbEngine)
+    summaryItems.push({ label: "Db Engine", value: cliState.dbEngine });
+  if (cliState.dbProvider)
+    summaryItems.push({ label: "Db Provider", value: cliState.dbProvider });
+  if (cliState.orm)
+    summaryItems.push({ label: "ORM", value: cliState.orm });
+  if (cliState.authLib)
+    summaryItems.push({ label: "Authentication", value: cliState.authLib });
+  if (cliState.socialProviders && cliState.socialProviders.length > 0)
+    summaryItems.push({ label: "Auth(Social Provider)", value: cliState.socialProviders.join(", ") });
 
-        cliState.orm = await select({
-            message: "Choose ORM",
-            choices: [
-                { name: "Drizzle", value: "drizzle" },
-                { name: "Prisma", value: "prisma" },
-                { name: "TypeORM", value: "typeorm" },
-            ],
-        });
-    }
+  uiSummary(summaryItems);
 
-    // ---------- PAYMENTS ----------
-    if (cliState.setupUpto === "payments") {
-        section("Payments");
+  console.log("");
 
-        cliState.paymentProvider = await select({
-            message: "Choose payment provider",
-            choices: [
-                { name: "Stripe", value: "stripe" },
-                { name: "Razorpay", value: "razorpay" },
-                { name: "Dodo Payments", value: "dodo" },
-            ],
-        });
-    }
+  const confirm = await uiConfirm("Proceed with this setup?");
 
-    console.log("\n\n");
-    showSummary(cliState);
-    console.log("\n\n");
+  if (!confirm) {
+    console.log(chalk.yellow("\n↻ Restarting setup...\n"));
+    return runPrompts(targetPath);
+  }
 
-    // ---------- CONFIRMATION ----------
-    const confirm = await select({
-        message: "Do you want to proceed with this setup?",
-        choices: [
-            { name: "✅ Yes, proceed", value: "yes" },
-            { name: "↩️ No, go back and edit", value: "no" },
-        ],
-    });
+  uiLoader("Generating plan...");
 
-    if (confirm === "no") {
-        console.log(chalk.yellow("\n↩️ Restarting setup...\n"));
-        // Reset state
-        Object.keys(cliState).forEach(
-            (key) => delete (cliState as any)[key]
-        );
-
-        // Restart prompts
-        return runPrompts();
-    }
-    console.log(
-        chalk.greenBright("\n🚀 Setup confirmed. Generating project...\n")
+  try {
+    const response = await axios.post(
+      `${process.env.API_BASE_URL || "http://localhost:6000/api"}/compose`,
+      cliState
     );
 
+    if (!response.data.success) {
+      uiFail(response.data.message);
+      process.exit(1);
+    }
 
+    // console.log(JSON.stringify(response.data.plan, null, 2))
+    await buildProject(response.data.plan, cliState.projectName!);
+
+    console.log("");
+    uiDivider();
+  } catch (error: any) {
+    uiFail("Failed to generate build plan");
+    process.exit(1);
+  }
 }
