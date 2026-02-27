@@ -1,8 +1,8 @@
 {
-  "name": "devkit",
+  "name": "devbuild",
   "version": "1.0.1",
   "bin": {
-    "devkit": "dist/index.js"
+    "devbuild": "dist/index.js"
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target node",
@@ -14,7 +14,7 @@
   "description": "Multi-framework starter kit CLI for rapid project setup",
   "keywords": [
     "cli",
-    "devkit",
+    "devbuild",
     "framework",
     "boilerplate",
     "starter-kit",

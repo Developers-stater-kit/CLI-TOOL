@@ -2,12 +2,12 @@
 <div align="center">
 
 ```
-██████╗ ███████╗██╗   ██╗██╗  ██╗██╗████████╗
-██╔══██╗██╔════╝██║   ██║██║ ██╔╝██║╚══██╔══╝
-██║  ██║█████╗  ██║   ██║█████╔╝ ██║   ██║   
-██║  ██║██╔══╝  ██║   ██║██╔═██╗ ██║   ██║   
-██████╔╝███████╗╚██████╔╝██║  ██╗██║   ██║   
-╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝  
+██████╗ ███████╗██╗   ██╗██████╗ ██╗   ██╗██╗██╗     ██████╗
+██╔══██╗██╔════╝██║   ██║██╔══██╗██║   ██║██║██║     ██╔══██╗
+██║  ██║█████╗  ██║   ██║██████╔╝██║   ██║██║██║     ██║  ██║
+██║  ██║██╔══╝  ╚██╗ ██╔╝██╔══██╗██║   ██║██║██║     ██║  ██║
+██████╔╝███████╗ ╚████╔╝ ██████╔╝╚██████╔╝██║███████╗██████╔╝
+╚═════╝ ╚══════╝  ╚═══╝  ╚═════╝  ╚═════╝ ╚═╝╚══════╝╚═════╝
 ```
 
 **Create a production-ready web or mobile app instantly with Devbuild**
@@ -20,16 +20,16 @@
 
 ---
 
-**DevKit** is a minimal CLI tool to bootstrap fullstack web/mobile apps — Next.js, React, or Expo — with authentication, database, ORM, and payment integration in one command.
+**Devbuild** is a minimal CLI tool to bootstrap fullstack web/mobile apps — Next.js, React, or Expo — with authentication, database, ORM, and payment integration in one command.
 
 ### Quick Start
 
 ```bash
-npm install -g devkit
-devkit init
+npm install -g devbuild
+devbuild create
 ```
 
-Answer the prompts, and DevKit scaffolds a production-ready project for you.
+Answer the prompts, and Devbuild scaffolds a production-ready project for you.
 
 - Next.js, React (web), or Expo (mobile)
 - Built-in Auth, DB, ORM, and Payments
@@ -45,7 +45,7 @@ _Built for modern developers. No setup hassle. Just code your app._
 
 **Made by [Debojeet Karmakar](https://www.linkedin.com/in/debojeet-karmakar-852820210/)**
 
-If you tried DevKit, I would love to hear your feedback!  
+If you tried Devbuild, I would love to hear your feedback!  
 Feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/debojeet-karmakar-852820210/) and let me know how your experience was or share your suggestions for improvements.
 
 ---

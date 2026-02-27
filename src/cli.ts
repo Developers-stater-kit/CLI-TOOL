@@ -6,13 +6,13 @@ import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
 import { startLoading, succeed } from "./components/loader";
-import { deleteFolder, emptyDirectory } from "./core/tools/file.tool";
+import { emptyDirectory } from "./core/tools/file.tool";
 
 export function runCLI() {
     const program = new Command();
 
     program
-        .name("devkit")
+        .name("devbuild")
         .description("Create a production-ready web or mobile app with one command")
         .version("1.0.0");
 
