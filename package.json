@@ -8,8 +8,9 @@
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target node",
+    "build:compile": "tsc",
     "dev": "ts-node src/index.ts",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "bun run build:compile"
   },
   "author": "Debojeet Karmakar",
   "license": "MIT",
