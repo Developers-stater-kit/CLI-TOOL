@@ -1,7 +1,7 @@
 import { parsePlan } from "./parser";
 import { fail, succeed } from "../components/loader";
-import { manager } from "./manager";
 import { uiSuccess } from "../components/ui/ui-tools";
+import { manager } from "./manager";
 
 export async function buildProject(
   rawPlan: any,
