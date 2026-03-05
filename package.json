@@ -1,13 +1,18 @@
 {
   "name": "@dvbuilds/kit",
   "version": "1.0.4",
-  "type": "module",
   "main": "dist/index.js",
   "bin": {
     "dvkit": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "fonts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target node",
+    "build": "tsc",
     "build:compile": "tsc",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "npm run build"
