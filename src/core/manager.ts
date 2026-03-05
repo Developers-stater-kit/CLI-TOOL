@@ -1,281 +1,212 @@
+import path from "node:path";
+import chalk from "chalk";
 import { select } from "@inquirer/prompts";
 import { startLoading, succeed, fail } from "../components/loader";
 import { PACKAGE_MANAGER } from "../types/constent";
-import { createFolder, deleteFile, deleteFolder, createFile } from "./tools/file.tool";
+import { createFolder, deleteFile, createFile } from "./tools/file.tool";
 import { cloneRepo, removeGit } from "./tools/git.tool";
 import { installPackages, runCommand, runInteractiveCommand } from "./tools/runtime.tool";
 import { createEnvExample } from "./tools/env.tool";
-import chalk from "chalk";
 import { section } from "../components/mislineous";
-import path from "node:path";
 import { uiSelect } from "../components/ui/ui-tools";
+import { buildAutoSetup, buildManualSetup } from "../components/setup-readme";
 
+/** * TYPES 
+ */
 type ManagerInput = {
-  projectName: string;
-  workflow: any[];
-  metadata: {
-    envVars: string[];
-    dependencies: string[];
-    devDependencies: string[];
-  };
+    projectName: string;
+    workflow: any[];
+    metadata: {
+        envVars: string[];
+        dependencies: string[];
+        devDependencies: string[];
+    };
 };
 
-export async function manager(input: ManagerInput) {
-  try {
-    const projectPath = process.cwd() + "/" + input.projectName;
-    const createdFiles: string[] = [];
+type ProjectState = {
+    projectPath: string;
+    pm: string;
+    installMode: "manual" | "automatic";
+    shadcnInit: string | null;
+    shadcnAdd: string | null;
+};
 
-    for (const step of input.workflow) {
-
-      // 1. FRAMEWORK
-      if (step.type === "framework") {
-        const pm = await uiSelect({
-          message: "Select package manager:",
-          choices: PACKAGE_MANAGER,
+/**
+ * UTILS: File Handlers
+ */
+const fileHandler = {
+    createProjectFiles: (files: any[], projectPath: string) => {
+        files.forEach((file, i) => {
+            const filePath = path.join(projectPath, file.path, file.name);
+            try {
+                createFile(filePath, file.content);
+                process.stdout.write(`\rProgress: (${i + 1}/${files.length})`);
+            } catch (err: any) {
+                console.warn(chalk.yellow(`\n⚠️ Failed: ${file.name} - ${err.message}`));
+            }
         });
+        console.log("");
+    },
 
-        (global as any).pm = pm;
-
-        startLoading(`Cloning ${step.key} framework...`);
-        createFolder(projectPath);
-
-        await cloneRepo(step.repoName, projectPath);
-        await removeGit(projectPath);
-
-        succeed(`Framework initialized ✅`);
-
-        const hasUiStep = input.workflow.some((s) => s.type === "ui");
-
-        if (!hasUiStep) {
-          startLoading(`Installing framework dependencies using ${pm}...`);
-          await installPackages(pm, projectPath);
-          succeed(`Framework dependencies installed`);
-        }
-
-        continue;
-      }
-
-      // 2. UI INIT (ShadCN)
-      if (step.type === "ui") {
-        const pm = (global as any).pm;
-        section("Initializing ShadCN UI");
-
-        const initCommand = step.commands[pm]?.init || step.commands[pm];
-        await runInteractiveCommand(initCommand, projectPath);
-
-        continue;
-      }
-
-      // 3. DB ORM
-      if (step.type === "db-orm") {
-        section("Setting up Database & ORM");
-
-        if (step.files && step.files.length > 0) {
-          startLoading(`Creating DB-ORM files (${step.files.length})...`);
-
-          for (let i = 0; i < step.files.length; i++) {
-            const file = step.files[i];
-            const filePath = path.join(projectPath, file.path, file.name);
-
-            try {
-              createFile(filePath, file.content);
-              createdFiles.push(filePath);
-              process.stdout.write(`\rCreating files (${i + 1}/${step.files.length})`);
-            } catch (error: any) {
-              console.warn(`⚠️  Failed to create ${file.name}: ${error.message}`);
-            }
-          }
-
-          console.log("\n");
-          succeed(`DB-ORM files created`);
-        }
-
-        continue;
-      }
-
-      // 4. AUTHENTICATION
-      if (step.type === "authentication") {
-        section("Setting up Authentication");
-
-        if (step.files && step.files.length > 0) {
-          startLoading(`Creating authentication files (${step.files.length})...`);
-
-          for (let i = 0; i < step.files.length; i++) {
-            const file = step.files[i];
-            const filePath = path.join(projectPath, file.path, file.name);
-
-            try {
-              createFile(filePath, file.content);
-              createdFiles.push(filePath);
-              process.stdout.write(`\rCreating files (${i + 1}/${step.files.length})`);
-            } catch (error: any) {
-              console.warn(`⚠️  Failed to create ${file.name}: ${error.message}`);
-            }
-          }
-
-          console.log("\n");
-          succeed(`Authentication files created`);
-        }
-
-        // Execute shadcn commands if present
-        if (step.commands) {
-          const pm = (global as any).pm;
-          section("Installing ShadCN Components");
-
-          const addCommand = step.commands.shadcn?.[pm];
-          if (addCommand) {
-            await runInteractiveCommand(addCommand, projectPath);
-          }
-        }
-
-        continue;
-      }
-    }
-
-    const pm = (global as any).pm;
-    const { envVars, dependencies, devDependencies } = input.metadata;
-
-    // Create .env.example BEFORE installing dependencies
-    if (envVars && envVars.length > 0) {
-      section("Setting Up Environment Variables");
-      createEnvExample(projectPath, envVars);
-      succeed(`.env.example created with ${envVars.length} variables`);
-    }
-
-    // Install Dependencies - with batching of 3 and retry logic
-    if (dependencies && dependencies.length > 0) {
-      const installCmd = pm === "npm" ? "install" : "add";
-      const chunkSize = 3;
-      const failedChunks: string[][] = [];
-
-      // First pass - install all chunks
-      for (let i = 0; i < dependencies.length; i += chunkSize) {
-        const chunk = dependencies.slice(i, i + chunkSize);
-        console.log(chalk.dim(`Installing: ${chunk.join(", ")}`));
-        startLoading(`Installing dependencies (${i + chunk.length}/${dependencies.length})...`);
-
+    cleanup: (projectPath: string) => {
         try {
-          await runCommand(`${pm} ${installCmd} ${chunk.join(" ")}`, projectPath);
-        } catch (error: any) {
-          console.warn(`⚠️  Batch failed: ${chunk.join(", ")}`);
-          failedChunks.push(chunk);
-        }
-      }
-
-      // Retry failed chunks once
-      if (failedChunks.length > 0) {
-        console.log("\n" + chalk.yellow(`Retrying ${failedChunks.length} failed batch(es)...`));
-
-        for (const chunk of failedChunks) {
-          console.log(chalk.dim(`Retrying: ${chunk.join(", ")}`));
-          startLoading(`Retrying dependencies...`);
-
-          try {
-            await runCommand(`${pm} ${installCmd} ${chunk.join(" ")}`, projectPath);
-            succeed(`Retried batch successful: ${chunk.join(", ")}`);
-          } catch (error: any) {
-            console.warn(`⚠️  Failed after retry: ${chunk.join(", ")}`);
-          }
-        }
-      }
-
-      succeed("Dependencies installed ✅");
+            deleteFile(path.join(projectPath, "devkit.config.json"));
+        } catch { }
     }
+};
 
-    // Install Dev Dependencies - with batching if more than 4 and retry logic
-    if (devDependencies && devDependencies.length > 0) {
-      const devInstallCmd = pm === "npm" ? "install -D" : "add -D";
-      const failedChunks: string[][] = [];
-
-      if (devDependencies.length > 4) {
-        // Batch if more than 4 dev dependencies
+/**
+ * UTILS: Installation Helpers
+ */
+const installHandler = {
+    async installInChunks(pm: string, type: "prod" | "dev", deps: string[], path: string) {
+        const cmd = type === "prod" ? (pm === "npm" ? "install" : "add") : (pm === "npm" ? "install -D" : "add -D");
         const chunkSize = 3;
-        // First pass
-        for (let i = 0; i < devDependencies.length; i += chunkSize) {
-          const chunk = devDependencies.slice(i, i + chunkSize);
-          console.log(chalk.dim(`Installing (dev): ${chunk.join(", ")}`));
-          startLoading(`Installing devDependencies (${i + chunk.length}/${devDependencies.length})...`);
 
-          try {
-            await runCommand(`${pm} ${devInstallCmd} ${chunk.join(" ")}`, projectPath);
-          } catch (error: any) {
-            console.warn(`⚠️  Dev batch failed: ${chunk.join(", ")}`);
-            failedChunks.push(chunk);
-          }
-        }
-
-        // Retry failed chunks once
-        if (failedChunks.length > 0) {
-          console.log("\n" + chalk.yellow(`Retrying ${failedChunks.length} failed dev batch(es)...`));
-
-          for (const chunk of failedChunks) {
-            console.log(chalk.dim(`Retrying (dev): ${chunk.join(", ")}`));
-            startLoading(`Retrying devDependencies...`);
-
+        for (let i = 0; i < deps.length; i += chunkSize) {
+            const chunk = deps.slice(i, i + chunkSize);
+            startLoading(`Installing ${type} deps: ${chunk.join(", ")}`);
             try {
-              await runCommand(`${pm} ${devInstallCmd} ${chunk.join(" ")}`, projectPath);
-              succeed(`Retried dev batch successful: ${chunk.join(", ")}`);
-            } catch (error: any) {
-              console.warn(`⚠️  Failed after retry: ${chunk.join(", ")}`);
+                await runCommand(`${pm} ${cmd} ${chunk.join(" ")}`, path);
+            } catch {
+                // Simple retry logic
+                await runCommand(`${pm} ${cmd} ${chunk.join(" ")}`, path).catch(() => { });
             }
-          }
         }
-      } else {
-        // Install all at once if 4 or less
-        console.log(chalk.dim(`Installing (dev): ${devDependencies.join(", ")}`));
-        startLoading(`Installing devDependencies (${devDependencies.length})...`);
-
-        try {
-          await runCommand(`${pm} ${devInstallCmd} ${devDependencies.join(" ")}`, projectPath);
-        } catch (error: any) {
-          console.warn(`⚠️  Dev dependency installation failed: ${error.message}`);
-        }
-      }
-
-      succeed("Dev dependencies installed ✅");
     }
+};
 
-    // Cleanup - delete devkit.config.json and temp folder
-    startLoading("Cleaning up...");
-    // Delete devkit.config.json from root
+/**
+ * STEP: SETUP README
+ */
+function generateSetupReadme(
+    state: ProjectState,
+    metadata: ManagerInput["metadata"],
+    mode: "manual" | "automatic"
+) {
+    const shared = {
+        projectName: path.basename(state.projectPath),
+        pm: state.pm,
+        metadata: metadata,
+    };
+
+    const content = mode === "manual"
+        ? buildManualSetup({
+            ...shared,
+            shadcnInit: state.shadcnInit,
+            shadcnAdd: state.shadcnAdd,
+        })
+        : buildAutoSetup(shared);
+
+    createFile(path.join(state.projectPath, "SETUP.md"), content);
+}
+
+/**
+ * MAIN MANAGER
+ */
+export async function manager(input: ManagerInput) {
+    const state: ProjectState = {
+        projectPath: path.join(process.cwd(), input.projectName),
+        pm: "npm",
+        installMode: "manual",
+        shadcnInit: null,
+        shadcnAdd: null
+    };
+
     try {
-      deleteFile(path.join(projectPath, "devkit.config.json"));
+        // --- PASS 1: Configuration & File Scaffolding ---
+        for (const step of input.workflow) {
+            switch (step.type) {
+                case "framework":
+                    state.pm = await uiSelect({ message: "Package Manager:", choices: PACKAGE_MANAGER });
+                    state.installMode = await uiSelect({
+                        message: "Mode:",
+                        choices: [
+                            { name: "Auto 🚀", value: "automatic" },
+                            { name: "Quick ⚡", value: "manual" }
+                        ]
+                    });
+
+                    startLoading(`Setting up ${step.key}...`);
+                    createFolder(state.projectPath);
+                    await cloneRepo(step.repoName, state.projectPath);
+                    await removeGit(state.projectPath);
+                    succeed("Framework ready ✅");
+                    break;
+
+                case "ui":
+                    state.shadcnInit = step.commands[state.pm]?.init || step.commands[state.pm];
+                    break;
+
+                case "db-orm":
+                    section("Database Setup");
+                    if (step.files) fileHandler.createProjectFiles(step.files, state.projectPath);
+                    succeed("ORM files created");
+                    break;
+
+                case "authentication":
+                    section("Auth Setup");
+                    if (step.files) fileHandler.createProjectFiles(step.files, state.projectPath);
+                    state.shadcnAdd = step.commands?.shadcn?.[state.pm] ?? null;
+                    succeed("Auth files created");
+                    break;
+            }
+        }
+
+        // --- PASS 2: Post-Processing ---
+        // --- PASS 2: Post-Processing ---
+        section("Finalizing");
+        if (input.metadata.envVars.length) {
+            createEnvExample(state.projectPath, input.metadata.envVars);
+            succeed(".env.example created ✅");
+        }
+
+        fileHandler.cleanup(state.projectPath);
+        succeed("Cleanup complete ✅");
+
+        if (state.installMode === "automatic") {
+            section("Installing Dependencies");
+            startLoading(`Installing base packages with ${state.pm}...`);
+            await installPackages(state.pm, state.projectPath);
+            succeed("Base packages installed ✅");
+
+            if (state.shadcnInit) { section("Initializing  Shadcn") };
+            if (state.shadcnInit) await runInteractiveCommand(state.shadcnInit, state.projectPath);
+            if (state.shadcnAdd) await runInteractiveCommand(state.shadcnAdd, state.projectPath);
+
+            section("Installing Dependencies");
+            await installHandler.installInChunks(state.pm, "prod", input.metadata.dependencies, state.projectPath);
+            await installHandler.installInChunks(state.pm, "dev", input.metadata.devDependencies, state.projectPath);
+            succeed("Auto-install complete ✅");
+
+            generateSetupReadme(state, input.metadata, "automatic");
+
+            console.log("");
+            section("Project Ready");
+            console.log(chalk.white("  Your project is installed and ready to go."));
+            console.log(chalk.gray("  Follow the steps in ") + chalk.cyan("SETUP.md") + chalk.gray(" to configure your environment and start the dev server."));
+            console.log("");
+        } else {
+            generateSetupReadme(state, input.metadata, "manual");
+
+            console.log("");
+            section("Next Steps");
+            console.log(chalk.white("  Your project is generated but not yet installed."));
+            console.log(chalk.gray("  Follow the steps in ") + chalk.cyan("SETUP.md") + chalk.gray(" to get it running:"));
+            console.log("");
+            console.log(chalk.gray("  1. cd ") + chalk.cyan(input.projectName));
+            console.log(chalk.gray("  2. Open ") + chalk.cyan("SETUP.md") + chalk.gray(" and follow each step"));
+            console.log("");
+        }
+
+        // --- Final Step: VS Code ---
+        const openCode = await select({
+            message: "Open in VS Code?",
+            choices: [{ name: "Yes", value: true }, { name: "No", value: false }]
+        });
+        if (openCode) await runCommand(`code ${state.projectPath}`, process.cwd());
+
     } catch (error: any) {
-      console.warn(`⚠️  Could not delete devkit.config.json: ${error.message}`);
+        fail(error.message);
     }
-    succeed("Cleanup complete");
-
-    // Success Summary
-    console.log("\n" + chalk.green.bold("✅ Project setup complete!"));
-    // console.log(chalk.cyan("\n📁 Created files:"));
-    // createdFiles.slice(0, 10).forEach(f => console.log(chalk.gray(`   ${f}`)));
-    // if (createdFiles.length > 10) {
-    //   console.log(chalk.gray(`   ... and ${createdFiles.length - 10} more files`));
-    // }
-
-   
-
-    // Open VS Code
-    try {
-      await runCommand('code --version', process.cwd());
- 
-      const openCode = await select({
-        message: "Open in VS Code?",
-        choices: [
-          { name: "Yes", value: "yes" },
-          { name: "No", value: "no" },
-        ],
-      });
-
-      if (openCode === "yes") {
-        await runCommand(`code ${projectPath}`, process.cwd());
-        succeed("Opening VS Code...");
-      }
-    } catch (error) {
-      // Silently fail if code not found
-    }
-
-  } catch (err: any) {
-    fail(err.message);
-  }
 }
