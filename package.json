@@ -10,7 +10,7 @@
     "build": "bun build src/index.ts --outdir dist --target node",
     "build:compile": "tsc",
     "dev": "ts-node src/index.ts",
-    "prepublishOnly": "bun run build:compile"
+    "prepublishOnly": "tsc"
   },
   "author": "Debojeet Karmakar",
   "license": "MIT",
