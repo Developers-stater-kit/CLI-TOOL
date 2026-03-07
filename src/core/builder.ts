@@ -2,10 +2,12 @@ import { parsePlan } from "./parser";
 import { fail, succeed } from "../components/loader";
 import { uiSuccess } from "../components/ui/ui-tools";
 import { manager } from "./manager";
+import { CliState } from "../types/constent";
 
 export async function buildProject(
   rawPlan: any,
-  projectName: string
+  projectName: string,
+  cliState: CliState,
 ) {
   try {
     // 1. Parse
@@ -22,7 +24,8 @@ export async function buildProject(
     await manager({
       projectName,
       workflow: plan.data.workflow,
-      metadata: plan.data.metadata
+      metadata: plan.data.metadata,
+      hasAuth:  cliState.setupUpto === "auth" || cliState.setupUpto === "payments",
     });
 
   } catch (error: any) {

@@ -199,6 +199,7 @@ export async function runPrompts(targetPath?: string | null) {
 
   try {
     const SERVICE_URL = "https://devkit-service.onrender.com";
+    // const DEV_SERVICE_URL = "http://localhost:4000";
         
     const response = await axios.post(
       `${SERVICE_URL!}/api/compose`,
@@ -211,7 +212,7 @@ export async function runPrompts(targetPath?: string | null) {
     }
 
     // console.log(JSON.stringify(response.data.plan, null, 2))
-    await buildProject(response.data.plan, cliState.projectName!);
+    await buildProject(response.data.plan, cliState.projectName!, cliState);
 
     console.log("");
     uiDivider();

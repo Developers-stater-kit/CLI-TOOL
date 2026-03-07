@@ -1,9 +1,10 @@
+import fs from "fs";
 import path from "node:path";
 import chalk from "chalk";
 import { select } from "@inquirer/prompts";
 import { startLoading, succeed, fail } from "../components/loader";
 import { PACKAGE_MANAGER } from "../types/constent";
-import { createFolder, deleteFile, createFile } from "./tools/file.tool";
+import { createFolder, deleteFile, createFile, deleteFolder, renameFile } from "./tools/file.tool";
 import { cloneRepo, removeGit } from "./tools/git.tool";
 import { installPackages, runCommand, runInteractiveCommand } from "./tools/runtime.tool";
 import { createEnvExample } from "./tools/env.tool";
@@ -21,6 +22,7 @@ type ManagerInput = {
         dependencies: string[];
         devDependencies: string[];
     };
+    hasAuth: boolean;
 };
 
 type ProjectState = {
@@ -101,6 +103,13 @@ function generateSetupReadme(
     createFile(path.join(state.projectPath, "SETUP.md"), content);
 }
 
+function finalCleanup(projectPath: string) {
+    const gitPath = path.join(projectPath, ".git");
+    const devkitConfig = path.join(projectPath, "devkit.config.json");
+
+    if (fs.existsSync(gitPath)) deleteFolder(gitPath);
+    if (fs.existsSync(devkitConfig)) deleteFile(devkitConfig);
+}
 /**
  * MAIN MANAGER
  */
@@ -118,12 +127,21 @@ export async function manager(input: ManagerInput) {
         for (const step of input.workflow) {
             switch (step.type) {
                 case "framework":
-                    state.pm = await uiSelect({ message: "Package Manager:", choices: PACKAGE_MANAGER });
+                    let pmValid = false;
+                    while (!pmValid) {
+                        state.pm = await uiSelect({ message: "Package Manager:", choices: PACKAGE_MANAGER });
+                        try {
+                            await runCommand(`${state.pm} --version`, process.cwd());
+                            pmValid = true;
+                        } catch {
+                            fail(`${state.pm} is not installed. Please choose another.`);
+                        }
+                    }
                     state.installMode = await uiSelect({
                         message: "Mode:",
                         choices: [
-                            { name: "Auto 🚀", value: "automatic" },
-                            { name: "Quick ⚡", value: "manual" }
+                            { name: "Auto-Install 🚀", value: "automatic" },
+                            { name: "Quick-Setup ⚡", value: "manual" }
                         ]
                     });
 
@@ -131,6 +149,26 @@ export async function manager(input: ManagerInput) {
                     createFolder(state.projectPath);
                     await cloneRepo(step.repoName, state.projectPath);
                     await removeGit(state.projectPath);
+
+                    const appPath = path.join(state.projectPath, "src", "app");
+                    const app2Path = path.join(state.projectPath, "src", "app2");
+
+                    switch (input.hasAuth) {
+                        case true:
+                            deleteFolder(appPath);
+                            renameFile(app2Path, appPath);
+                            break;
+                        case false:
+                            deleteFolder(app2Path);
+                            break;
+                    }
+                    const packageJsonPath = path.join(state.projectPath, "package.json");
+                    if (fs.existsSync(packageJsonPath)) {
+                        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+                        packageJson.name = input.projectName;
+                        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
+                    }
+                    console.log("")
                     succeed("Framework ready ✅");
                     break;
 
@@ -153,7 +191,6 @@ export async function manager(input: ManagerInput) {
             }
         }
 
-        // --- PASS 2: Post-Processing ---
         // --- PASS 2: Post-Processing ---
         section("Finalizing");
         if (input.metadata.envVars.length) {
@@ -179,6 +216,7 @@ export async function manager(input: ManagerInput) {
             await installHandler.installInChunks(state.pm, "dev", input.metadata.devDependencies, state.projectPath);
             succeed("Auto-install complete ✅");
 
+            finalCleanup(state.projectPath);
             generateSetupReadme(state, input.metadata, "automatic");
 
             console.log("");
@@ -204,7 +242,7 @@ export async function manager(input: ManagerInput) {
             message: "Open in VS Code?",
             choices: [{ name: "Yes", value: true }, { name: "No", value: false }]
         });
-        if (openCode) await runCommand(`code ${state.projectPath}`, process.cwd());
+        if (openCode) await runCommand(`code ${state.projectPath} ${path.join(state.projectPath, "SETUP.md")}`, process.cwd());
 
     } catch (error: any) {
         fail(error.message);

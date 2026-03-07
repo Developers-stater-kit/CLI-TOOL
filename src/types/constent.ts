@@ -2,7 +2,7 @@ export type AppType = "web" | "mobile"
 export type ScopeType = "frontend" | "backend" | "fullstack"
 export type AuthMethod = "email" | "social" | "otp";
 export type SocialProvider = "google" | "github";
-export type SetupUpto = "framework" | "auth" | "db-orm" | "payments";
+export type SetupUpto = "framework" | "db-orm" | "auth" | "payments";
 
 export interface CliState {
   projectName?: string;
